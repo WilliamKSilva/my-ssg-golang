@@ -1,0 +1,102 @@
+
+	<!DOCTYPE html>
+		<html lang="en">
+			<head>
+				<meta charset="UTF-8" />
+				<title>goroutines</title>
+				<link rel="stylesheet" href="/style.css" />
+			</head>
+		<body>
+			<header>
+				<a href="/">← Home</a>
+			</header>
+			<main>
+				<h1>Introduction</h1>
+<ul>
+<li>This repository contains examples of concurrency using golang <em>Goroutines</em>.</li>
+<li><em>Goroutines</em> are lightweight threads managed by golang runtime that provide concurrent
+processing of functions.</li>
+</ul>
+<h1>When to use Goroutines</h1>
+<ul>
+<li>As mentioned before, Goroutines provide concurrency for golang, the right question should be, &quot;When should I use concurrency?&quot;
+Concurrency is a strong method of processing that allows code to be executed &quot;at the same time&quot;.
+Example: You have a batch of multiple users payment that needs to be processed through an external API service.
+You can write a function that calls this payment API and use Goroutines so all the processing is executed
+&quot;at the same time&quot;.</li>
+<li>Under the hood Goroutines use execution scheduling, so it just appear that everything is being executed at the same time, but what it is really happening is a smart use of processing time. The scheduler can check if a thread is currently not being used (waiting for IO, for example, an HTTP response) and put another thread to work. That way, the process is never really stopped, there's always some piece of code bein run.</li>
+<li>A core principle of concurrency is that multiple tasks can be in progress at once, but not necessarily <em>physically</em> at the same time. What's really happening is sharing off processing time. One task is independent of another and can finish before or after the others.</li>
+<li>This is how concurrency differs from paralelism: both of the methods exist to execute multible things &quot;at once&quot;, but concurrency creates the appearence of simultaneous execution through scheduling, parallelism actually performs processing at the same time, using multiple processors or cores at the physical level.</li>
+<li>All parallelism is concurrent, since the tasks are independent of each other and will be executed each one on their own time, but not all concurrency is parallelism, since in many implementations what is being used is processing time share and not multiple physical processing units.</li>
+</ul>
+<h1>Examples</h1>
+<h3>Page Download</h3>
+<ul>
+<li>
+<p>To run this example you can use <code>go run page_download/main.go</code>.</p>
+</li>
+<li>
+<p>If you want to personalize the test you can pass the flag <code>-concurrency=true or -concurrency=false</code> to use Goroutines or not, the default is <code>true</code>. You can also pass how much pages should be downloaded using <code>-pages=100</code>, the default is <code>50</code>.</p>
+</li>
+<li>
+<p>On the first example <em>page_download</em> the idea is to make multiple GET HTTP request to a random website to download its content and check how much time will take
+with and without Goroutines.
+Since HTTP requests are IO bound and in this case the response of one download webpage not depend on the others we can spawn a Goroutine to make this operations
+concurrently.</p>
+</li>
+<li>
+<p>The results <em>with</em> Goroutines: running 100 requests our process ran on <em>~0.29</em> seconds.</p>
+</li>
+<li>
+<p>The results <em>without</em> Goroutines: running 100 requests our process ran on <em>~3.4</em> seconds.</p>
+</li>
+</ul>
+<h3>User Registration</h3>
+<ul>
+<li>
+<p>To run this example you can use <code>go run user_registration/main.go</code>.</p>
+</li>
+<li>
+<p>If you want to personalize the test you can pass the flag <code>-concurrency=true or -concurrency=false</code> to use Goroutines or not, the default is <code>true</code>. You can also pass how much threads the program will use with <code>-threads=5</code>, the default is <code>4</code>.</p>
+</li>
+<li>
+<p>On this example the idea was to read 200 users from two CSV files and populate their address data
+based on their CEP (a identifier of address in Brazil) with the street name and the city name using a third party REST API.</p>
+</li>
+<li>
+<p>At first glance I thought that the huge difference would be when we read the data from the CSV files,
+but the difference was actually minimal on this step of the test. With Goroutines the time to read all users was around ~0.9 seconds and without was ~0.8/~0.9. A good explanation for this is the fact that the IO required to read data from the files is actually prety fast, since them are local we have <em>0</em> latency and are only dependent on our disk speed. Spawning Goroutines in this step can actually make the performance a little worse in some cases, since we have to spend processing time managing our threads.</p>
+</li>
+<li>
+<p>The real difference in performance using Goroutines where on the &quot;enrich&quot; step of the process. Since we need to make a
+request to an external API to search for the details of our users addresses, this step can take some time, since it is a IO bound and is heavily dependent on the latency of the request. My first idea to make this work was to take all the users we read from the CSV files and make small <em>batchs</em> of all the users and call our function that does the enrichment of the address data using a Goroutine.</p>
+</li>
+<li>
+<p>The results <em>with</em> Goroutines: reading 200 users from a CSV file and searching for their address took <em>~8.7</em> seconds.</p>
+</li>
+<li>
+<p>The results <em>without</em> Goroutines: reading 200 users from a CSV file and searching for their address took <em>~124.0</em> seconds.</p>
+</li>
+</ul>
+<h3>Worker Pool</h3>
+<ul>
+<li>
+<p>This example demonstrates a simple service check, where we send a GET request to a website and determine whether the response status code indicates success.</p>
+</li>
+<li>
+<p>The main idea here is to implement a thread pool pattern, where we define a fixed number of workers (goroutines) to process tasks concurrently. Each worker is responsible for executing a specific &quot;job&quot; from the queue.</p>
+</li>
+<li>
+<p>Since we’re using Go, we also leverage the concept introduced in the previous example: channels. Each worker listens for incoming jobs on the jobs channel, executes the assigned task, and then sends the result to the results channel.</p>
+</li>
+<li>
+<p>In this case, a worker executes a job — checking the availability of a specific website. Once the check is complete, the worker sends a custom result to the results channel indicating whether the check was successful.</p>
+</li>
+</ul>
+
+			</main>
+			<footer>
+				<p>© 2025 Your Name</p>
+			</footer>
+		</body>
+	</html>
