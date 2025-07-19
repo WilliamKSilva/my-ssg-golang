@@ -17,7 +17,7 @@ const tpl = `
 			<head>
 				<meta charset="UTF-8" />
 				<title>{{ .Title }}</title>
-				<link rel="stylesheet" href="/style.css" />
+				<link rel="stylesheet" href="./assets/style.css" />
 			</head>
 		<body>
 			<header>
@@ -80,7 +80,7 @@ func main() {
 	}
 
 	for _, d := range dirs {
-		t, err := template.New("public/webpage").Parse(tpl)
+		t, err := template.New("webpage").Parse(tpl)
 		if err != nil {
 			log.Fatalf("[ERROR] error trying to allocate new template HTML page: %v", err)
 		}
