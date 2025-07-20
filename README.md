@@ -13,6 +13,7 @@ personal blog, where the goal is to store blog posts you want to write about.
 ### Blog Posts
 - When I'am studying a subject, I like to take notes and write about this particular thing on a `Markdown` file, so this is the file supported in this implementation.
 - Every .md file you place inside the `content` directory will be processed when you run `make run` and be turned into a new HTML file that you can access through the URL: public/file.html.
+- To make the list of blog posts on the home page to work you need to populate the file `content/previews.json`.
 
 ### Templates
 - The `templates` directory stores the core structure of the two main webpages that our blog will have: the home page `index.html` and the articles webpage `article.html`.
