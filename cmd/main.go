@@ -23,28 +23,6 @@ type ArticlePreviewData struct {
 	ImageSRC    string `json:"imageSRC"`
 }
 
-const tpl = `
-	<!DOCTYPE html>
-		<html lang="en">
-			<head>
-				<meta charset="UTF-8" />
-				<title>{{ .Title }}</title>
-				<link rel="stylesheet" href="./assets/articles.css" />
-			</head>
-		<body>
-			<header>
-				<a href="/">← Home</a>
-			</header>
-			<main>
-				{{ .Content }}
-			</main>
-			<footer>
-				<p>© 2025 Your Name</p>
-			</footer>
-		</body>
-	</html>
-`
-
 func main() {
 	err := parseMarkdown()
 	if err != nil {
@@ -114,7 +92,7 @@ func buildArticlesPage() error {
 
 	// Populate the Article HTML template for each generated
 	// HTML article from the Markdown files
-	t, err := template.New("webpage").Parse(tpl)
+	t, err := template.ParseFiles("templates/article.html")
 	if err != nil {
 		return fmt.Errorf("[ERROR] error trying to allocate new template HTML page: %v", err)
 	}
