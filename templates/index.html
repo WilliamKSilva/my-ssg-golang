@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>home</title>
+    <link rel="stylesheet" href="./assets/index.css" />
+</head>
+
+<body>
+    <header>
+        <strong>William Kelvin</strong>
+        <section>
+            <a href="https://www.linkedin.com/in/williamkelvinsilva/">Linkedin</a>
+            <a href="https://github.com/WilliamKSilva">Github</a>
+        </section>
+    </header>
+    <main>
+        <h1>Articles</h1>
+        <section class="article-list">
+            {{ range .Articles }}
+                <article class="article-card">
+                    <a href="/{{ .Link }}">
+                        <img src="/{{ .ImageSRC }}" alt="{{ .Title }}" />
+                        <h2>{{ .Title }}</h2>
+                        <p>{{ .Description }}</p>
+                    </a>
+                </article>
+            {{ end }}
+        </section>
+    </main>
+    <footer>
+        <p>© 2025 William Kelvin da Silva</p>
+    </footer>
+</body>
+
+</html>

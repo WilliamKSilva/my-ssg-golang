@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"log"
@@ -11,13 +12,24 @@ import (
 	"github.com/yuin/goldmark"
 )
 
+type ArticlePreview struct {
+	Articles []ArticlePreviewData `json:"articles"`
+}
+
+type ArticlePreviewData struct {
+	Title       string `json:"title"`
+	Link        string `json:"link"`
+	Description string `json:"description"`
+	ImageSRC    string `json:"imageSRC"`
+}
+
 const tpl = `
 	<!DOCTYPE html>
 		<html lang="en">
 			<head>
 				<meta charset="UTF-8" />
 				<title>{{ .Title }}</title>
-				<link rel="stylesheet" href="./assets/style.css" />
+				<link rel="stylesheet" href="./assets/articles.css" />
 			</head>
 		<body>
 			<header>
@@ -33,6 +45,23 @@ const tpl = `
 	</html>
 `
 
+func main() {
+	err := parseMarkdown()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = buildArticlesPage()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = buildHomePage()
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
 func parseMarkdown() error {
 	dirs, err := os.ReadDir("content")
 	if err != nil {
@@ -42,6 +71,15 @@ func parseMarkdown() error {
 	for _, d := range dirs {
 		if d.IsDir() {
 			continue
+		}
+
+		fExtensionSplit := strings.Split(d.Name(), ".")
+		if len(fExtensionSplit) > 0 {
+			fExtension := fExtensionSplit[1]
+
+			if fExtension == "json" {
+				continue
+			}
 		}
 
 		b, err := os.ReadFile(fmt.Sprintf("content/%s", d.Name()))
@@ -68,23 +106,20 @@ func parseMarkdown() error {
 	return nil
 }
 
-func main() {
-	err := parseMarkdown()
-	if err != nil {
-		log.Fatal(err)
-	}
-
+func buildArticlesPage() error {
 	dirs, err := os.ReadDir("content/gen")
 	if err != nil {
-		log.Fatalf("[ERROR] error trying to read gen HTML files: %v", err)
+		return fmt.Errorf("[ERROR] error trying to read gen HTML files: %v", err)
+	}
+
+	// Populate the Article HTML template for each generated
+	// HTML article from the Markdown files
+	t, err := template.New("webpage").Parse(tpl)
+	if err != nil {
+		return fmt.Errorf("[ERROR] error trying to allocate new template HTML page: %v", err)
 	}
 
 	for _, d := range dirs {
-		t, err := template.New("webpage").Parse(tpl)
-		if err != nil {
-			log.Fatalf("[ERROR] error trying to allocate new template HTML page: %v", err)
-		}
-
 		fName := strings.Replace(d.Name(), ".html", "", 5)
 
 		b, err := os.ReadFile(fmt.Sprintf("content/gen/%s", d.Name()))
@@ -113,4 +148,36 @@ func main() {
 			continue
 		}
 	}
+
+	return nil
+}
+
+func buildHomePage() error {
+	t, err := template.ParseFiles("templates/index.html")
+	if err != nil {
+		return fmt.Errorf("[ERROR] error trying to read home page HTML template file")
+	}
+
+	var articlePreview ArticlePreview
+	b, err := os.ReadFile("content/previews.json")
+	if err != nil {
+		return fmt.Errorf("[ERROR] error trying to read preview data: %v", err)
+	}
+
+	err = json.Unmarshal(b, &articlePreview)
+	if err != nil {
+		return fmt.Errorf("[ERROR] error trying to unmarshal JSON preview data: %v", err)
+	}
+
+	f, err := os.Create("public/index.html")
+	if err != nil {
+		return fmt.Errorf("[ERROR] error trying to create home HTML file: %v", err)
+	}
+
+	err = t.Execute(f, articlePreview)
+	if err != nil {
+		return fmt.Errorf("[ERROR] error trying to populate template with content: %v", err)
+	}
+
+	return nil
 }
