@@ -4,7 +4,7 @@
 - The idea is to generate HTML content for articles wrote in `Markdown` files.
 
 - This project was built for personal use, it has a "specific" usecase, but maybe if you also need a very basic
-personal blog, where the goal is to store blog posts you want to write about.
+personal blog, where the goal is to store blog posts you want to write about you can use this implementation.
 
 - This approach makes easier to deploy static files to services like Github Pages or Netlify, for example.
 
@@ -26,4 +26,4 @@ personal blog, where the goal is to store blog posts you want to write about.
 - You need `Golang` toolchain installed: https://go.dev/doc/install.
 - Place your blog posts inside the `content` directory.
 - Run `make run`.
-- Now you have your static websites inside the `directory`.
+- Now you have your static pages inside the `public` directory.
