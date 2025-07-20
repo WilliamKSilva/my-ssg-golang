@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"html/template"
 	"log"
+	"net/http"
 	"os"
 	"strings"
 
@@ -35,6 +36,11 @@ func main() {
 	}
 
 	err = buildHomePage()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = runHTTPServer()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -158,4 +164,12 @@ func buildHomePage() error {
 	}
 
 	return nil
+}
+
+func runHTTPServer() error {
+	fs := http.FileServer(http.Dir("./public"))
+	http.Handle("/", fs)
+
+	log.Printf("[INFO] server running on :8080")
+	return http.ListenAndServe(":8080", nil)
 }
