@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"encoding/json"
 	"flag"
 	"fmt"
 	"html/template"
@@ -198,23 +197,22 @@ func buildIndexPage() error {
 		return fmt.Errorf("[ERROR] error trying to read home page HTML template file")
 	}
 
-	var postPreview PostPreview
-	b, err := os.ReadFile("content/previews.json")
-	if err != nil {
-		return fmt.Errorf("[ERROR] error trying to read preview data: %v", err)
-	}
-
-	err = json.Unmarshal(b, &postPreview)
-	if err != nil {
-		return fmt.Errorf("[ERROR] error trying to unmarshal JSON preview data: %v", err)
-	}
-
 	f, err := os.Create(fmt.Sprintf("%s/index.html", outputPath))
 	if err != nil {
 		return fmt.Errorf("[ERROR] error trying to create home HTML file: %v", err)
 	}
 
-	err = t.Execute(f, postPreview)
+	err = t.Execute(f, PostPreview{
+		Posts: []PostPreviewData{
+			{
+				Title:       "Goroutines",
+				Description: "Goroutines benchmarks, examples and observations",
+				Link:        "posts/goroutines.html",
+				ImageSRC:    "assets/gopher.png",
+			},
+		},
+	},
+	)
 	if err != nil {
 		return fmt.Errorf("[ERROR] error trying to populate template with content: %v", err)
 	}
