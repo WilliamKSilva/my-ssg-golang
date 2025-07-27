@@ -11,5 +11,6 @@ run-http-server:
 clean:
 	@echo "Deleting generated HTML..."
 	@rm -rf content/gen
-	@rm -rf $(OUTPUT_PATH)
+	@rm -rf $(OUTPUT_PATH)/*.html
+	@rm -rf $(OUTPUT_PATH)/posts/*.html
 	@echo "Sucessfully deleted HTML files..."
