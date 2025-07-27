@@ -1,4 +1,4 @@
-OUTPUT_PATH=blog
+OUTPUT_PATH=../
 
 run:
 	@echo "Running SSG with Go toolchain"
