@@ -1,4 +1,4 @@
 content/gen
-public/
+public/*.html
 
 .vscode
