@@ -1,12 +1,15 @@
-CONTENT = content
-PUBLIC_PATH = public
+OUTPUT_PATH=blog
 
 run:
 	@echo "Running SSG with Go toolchain"
-	go run cmd/main.go
+	go run cmd/main.go -outputPath=$(OUTPUT_PATH)
 
-clean-html:
+run-http-server:
+	@echo "Running SSG with Go toolchain"
+	go run cmd/main.go -outputPath=$(OUTPUT_PATH) -httpServer=true
+
+clean:
 	@echo "Deleting generated HTML..."
-	@rm $(CONTENT)/gen/*.html
-	@rm $(PUBLIC_PATH)/*.html
+	@rm -rf content/gen
+	@rm -rf $(OUTPUT_PATH)
 	@echo "Sucessfully deleted HTML files..."
