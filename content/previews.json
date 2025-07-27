@@ -4,13 +4,13 @@
             "title": "Goroutines",
             "description": "Goroutines benchmarks, examples and observations",
             "imageSRC": "assets/gopher.png",
-            "link": "goroutines.html"
+            "link": "posts/goroutines.html"
         },
         {
             "title": "Teste",
             "description": "Goroutines benchmarks, examples and observations",
             "imageSRC": "assets/gopher.png",
-            "link": "goroutines.html"
+            "link": "posts/goroutines.html"
         }
     ]
 }

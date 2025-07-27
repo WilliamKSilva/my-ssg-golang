@@ -19,10 +19,10 @@
     </header>
     <main>
         <div>
-            <h1>Articles</h1>
-            <section class="article-list">
-                {{ range .Articles }}
-                <article class="article-card">
+            <h1>Posts</h1>
+            <section class="post-list">
+                {{ range .Posts }}
+                <article class="post-card">
                     <a href="/{{ .Link }}">
                         <img src="/{{ .ImageSRC }}" alt="{{ .Title }}" />
                         <h2>{{ .Title }}</h2>

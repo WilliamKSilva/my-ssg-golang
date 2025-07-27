@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"html/template"
 	"log"
@@ -13,24 +14,51 @@ import (
 	"github.com/yuin/goldmark"
 )
 
-type ArticlePreview struct {
-	Articles []ArticlePreviewData `json:"articles"`
+type PostPreview struct {
+	Posts []PostPreviewData `json:"articles"`
 }
 
-type ArticlePreviewData struct {
+type PostPreviewData struct {
 	Title       string `json:"title"`
 	Link        string `json:"link"`
 	Description string `json:"description"`
 	ImageSRC    string `json:"imageSRC"`
 }
 
+var httpServer bool
+var outputPath string
+
 func main() {
-	htmlFiles, err := os.ReadDir("content/gen")
+	flag.BoolVar(&httpServer, "httpServer", false, "Start a HTTP server with the generated files served so the content can be visualized")
+	flag.StringVar(&outputPath, "outputPath", "public/", "Specify the output path of the final HTML content")
+
+	flag.Parse()
+
+	// Create the dir to store generated Markdown HTML content if does not exist
+	_, err := os.ReadDir("content/gen")
 	if err != nil {
-		// Create the dir to store generated Markdown HTML content if does not exist
 		err := os.Mkdir("content/gen", 0755)
 		if err != nil {
 			log.Fatalf("[ERROR] error trying to create 'gen' directory: %v", err)
+		}
+	}
+
+	// Create the dir to store output HTML static files
+	_, err = os.ReadDir(outputPath)
+	if err != nil {
+		err := os.Mkdir(outputPath, 0755)
+		if err != nil {
+			log.Fatalf("[ERROR] error trying to create '%s' directory: %v", outputPath, err)
+		}
+	}
+
+	// Create the dir to store output posts HTML static files
+	blogPostsPath := fmt.Sprintf("%s/posts", outputPath)
+	_, err = os.ReadDir(blogPostsPath)
+	if err != nil {
+		err := os.Mkdir(blogPostsPath, 0755)
+		if err != nil {
+			log.Fatalf("[ERROR] error trying to create '%s' directory: %v", blogPostsPath, err)
 		}
 	}
 
@@ -44,19 +72,26 @@ func main() {
 		log.Fatal(err)
 	}
 
-	err = buildArticlesPage(htmlFiles)
+	err = buildPostPages()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	err = buildHomePage()
+	err = buildIndexPage()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	err = runHTTPServer()
-	if err != nil {
-		log.Fatal(err)
+	err = os.CopyFS(fmt.Sprintf("%s/assets/", outputPath), os.DirFS("assets"))
+	if err != nil && !strings.Contains(err.Error(), "file exists") {
+		log.Fatalf("[ERROR] error tring to copy assets to final output path: %v", err)
+	}
+
+	if httpServer {
+		err = runHTTPServer()
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 }
 
@@ -108,12 +143,20 @@ func parseMarkdown(contentFiles []os.DirEntry) error {
 	return nil
 }
 
-func buildArticlesPage(htmlFiles []os.DirEntry) error {
-	// Populate the Article HTML template for each generated
-	// HTML article from the Markdown files
-	t, err := template.ParseFiles("templates/article.html")
+func buildPostPages() error {
+	// Populate the Post HTML template for each generated
+	// HTML post from the Markdown files
+	t, err := template.ParseFiles("templates/post.html")
 	if err != nil {
 		return fmt.Errorf("[ERROR] error trying to allocate new template HTML page: %v", err)
+	}
+
+	htmlFiles, err := os.ReadDir("content/gen")
+	if err != nil {
+		err := os.Mkdir("content/gen", 0755)
+		if err != nil {
+			log.Fatalf("[ERROR] error trying to create 'gen' directory: %v", err)
+		}
 	}
 
 	for _, f := range htmlFiles {
@@ -133,9 +176,9 @@ func buildArticlesPage(htmlFiles []os.DirEntry) error {
 			Content: template.HTML(b),
 		}
 
-		f, err := os.Create(fmt.Sprintf("public/%s.html", fName))
+		f, err := os.Create(fmt.Sprintf("%s/posts/%s.html", outputPath, fName))
 		if err != nil {
-			log.Printf("[ERROR] error trying to open output HTML file: %v", err)
+			log.Printf("[ERROR] error trying to create output HTML file: %v", err)
 			continue
 		}
 
@@ -149,29 +192,29 @@ func buildArticlesPage(htmlFiles []os.DirEntry) error {
 	return nil
 }
 
-func buildHomePage() error {
+func buildIndexPage() error {
 	t, err := template.ParseFiles("templates/index.html")
 	if err != nil {
 		return fmt.Errorf("[ERROR] error trying to read home page HTML template file")
 	}
 
-	var articlePreview ArticlePreview
+	var postPreview PostPreview
 	b, err := os.ReadFile("content/previews.json")
 	if err != nil {
 		return fmt.Errorf("[ERROR] error trying to read preview data: %v", err)
 	}
 
-	err = json.Unmarshal(b, &articlePreview)
+	err = json.Unmarshal(b, &postPreview)
 	if err != nil {
 		return fmt.Errorf("[ERROR] error trying to unmarshal JSON preview data: %v", err)
 	}
 
-	f, err := os.Create("public/index.html")
+	f, err := os.Create(fmt.Sprintf("%s/index.html", outputPath))
 	if err != nil {
 		return fmt.Errorf("[ERROR] error trying to create home HTML file: %v", err)
 	}
 
-	err = t.Execute(f, articlePreview)
+	err = t.Execute(f, postPreview)
 	if err != nil {
 		return fmt.Errorf("[ERROR] error trying to populate template with content: %v", err)
 	}
@@ -180,7 +223,7 @@ func buildHomePage() error {
 }
 
 func runHTTPServer() error {
-	fs := http.FileServer(http.Dir("./public"))
+	fs := http.FileServer(http.Dir(outputPath))
 	http.Handle("/", fs)
 
 	log.Printf("[INFO] server running on :8080")
